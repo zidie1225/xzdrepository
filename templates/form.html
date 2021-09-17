@@ -1,0 +1,372 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>物料信息</title>
+
+    <style type="text/css">
+      <!--
+      body,div,p,ul,li,font,span,td,th{
+      font-size:10pt;
+      line-height:155%;
+      }
+      table{
+      border-top-width: 1px;
+      border-right-width: 1px;
+      border-bottom-width: 0px;
+      border-left-width: 1px;
+      border-top-style: solid;
+      border-right-style: solid;
+      border-bottom-style: none;
+      border-left-style: solid;
+      border-top-color: #CCCCCC;
+      border-right-color: #CCCCCC;
+      border-bottom-color: #CCCCCC;
+      border-left-color: #CCCCCC;
+      }
+      td{
+      border-bottom-width: 1px;
+      border-bottom-style: solid;
+      border-bottom-color: #CCCCCC;
+      }
+      .EditCell_TextBox {
+      width: 90%;
+      border:1px solid #0099CC;
+      }
+      .EditCell_DropDownList {
+      width: 90%;
+      }
+      -->
+    </style>   
+  </head>
+
+  <body>
+    <form id="form1" name="form1" method="post" action="">
+      <h3>物料信息</h3>
+      <table
+        width="698"
+        border="0"
+        cellpadding="0"
+        cellspacing="0"
+        id="tabProduct"
+      >
+        <tr>
+          <td width="32" align="center" bgcolor="#EFEFEF" Name="Num">
+            <input type="checkbox" name="checkbox" value="checkbox" />
+          </td>
+          <td width="103" bgcolor="#EFEFEF" Name="ipaddress" EditType="TextBox">
+            IP
+          </td>
+          <td width="103" bgcolor="#EFEFEF" Name="sshpassword" EditType="TextBox">
+            ssh密码
+          </td>
+          <td width="103" bgcolor="#EFEFEF" Name="rick" EditType="TextBox">
+            机架
+          </td>
+          <td width="103" bgcolor="#EFEFEF" Name="position" EditType="TextBox">
+            位置
+          </td>
+          <td width="120" bgcolor="#EFEFEF" Name="user" EditType="DropDownList" DataItems="{text:'刘皮',value:'刘皮'}, {text:'熊皮',value:'熊皮'}">
+            占用人
+          </td>
+        </tr>
+
+        <tr>
+          <td align="center" bgcolor="#FFFFFF">
+            <input type="checkbox" name="checkbox2" value="checkbox" />
+          </td>
+          <td bgcolor="#FFFFFF">10.177.1.64</td>
+          <td bgcolor="#FFFFFF">password</td>
+          <td bgcolor="#FFFFFF">D1</td>
+          <td bgcolor="#FFFFFF">04</td>
+          <td bgcolor="#FFFFFF" Value="刘皮">刘皮</td>
+        </tr>
+
+        <tr>
+          <td align="center" bgcolor="#FFFFFF">
+            <input type="checkbox" name="checkbox22" value="checkbox" />
+          </td>
+          <td bgcolor="#FFFFFF">10.177.1.65</td>
+          <td bgcolor="#FFFFFF">*a1qweq</td>
+          <td bgcolor="#FFFFFF">A1</td>
+          <td bgcolor="#FFFFFF">07</td>
+          <td bgcolor="#FFFFFF" Value="熊皮">熊皮</td>
+        </tr>
+      </table>
+
+      <br />
+
+      <input
+        type="button"
+        name="Submit"
+        value="新增"
+        onclick="AddRow(document.getElementById('tabProduct'),1)"
+      />
+      <input
+        type="button"
+        name="Submit2"
+        value="删除"
+        onclick="DeleteRow(document.getElementById('tabProduct'),1)"
+      />
+      <input
+        type="button"
+        name="Submit22"
+        value="重置"
+        onclick="window.location.reload()"
+      />
+      <input
+        type="submit"
+        name="Submit3"
+        value="提交"
+        onclick="GetTableData(document.getElementById('tabProduct'));return false;"
+      />
+    </form>
+    <script language="javascript">
+      var tabProduct = document.getElementById("tabProduct");
+      EditTables(tabProduct);
+      /**
+       * <JS实现可编辑的表格></JS实现可编辑的表格>
+       * 用法:EditTables(tb1,tb2,tb2,......);
+       **/
+
+      /* 设置多个表格可编辑 */
+      function EditTables() {
+        for (var i = 0; i < arguments.length; i++) {
+          SetTableCanEdit(arguments[i]);
+        }
+      }
+
+      /* 设置表格是可编辑的 */
+      function SetTableCanEdit(table) {
+        for (var i = 1; i < table.rows.length; i++) {
+          SetRowCanEdit(table.rows[i]);
+        }
+      }
+
+      function SetRowCanEdit(row) {
+        for (var j = 0; j < row.cells.length; j++) {
+          //如果当前单元格指定了编辑类型，则表示允许编辑
+          var editType = row.cells[j].getAttribute("EditType");
+          if (!editType) {
+            //如果当前单元格没有指定，则查看当前列是否指定
+            editType = row.parentNode.rows[0].cells[j].getAttribute("EditType");
+          }
+          if (editType) {
+            row.cells[j].onclick = function () {
+              EditCell(this);
+            };
+          }
+        }
+      }
+
+      /* 设置指定单元格可编辑 */
+      function EditCell(element, editType) {
+        var editType = element.getAttribute("EditType");
+        if (!editType) {
+          //如果当前单元格没有指定，则查看当前列是否指定
+          editType =
+            element.parentNode.parentNode.rows[0].cells[
+              element.cellIndex
+            ].getAttribute("EditType");
+        }
+
+        switch (editType) {
+          case "TextBox":
+            CreateTextBox(element, element.innerHTML);
+            break;
+          case "DropDownList":
+            CreateDropDownList(element);
+            break;
+          default:
+            break;
+        }
+      }
+
+      /* 为单元格创建可编辑输入框 */
+      function CreateTextBox(element, value) {
+        //检查编辑状态，如果已经是编辑状态，跳过
+        var editState = element.getAttribute("EditState");
+        if (editState != "true") {
+          //创建文本框
+          var textBox = document.createElement("INPUT");
+          textBox.type = "text";
+          textBox.className = "EditCell_TextBox";
+
+          //设置文本框当前值
+          if (!value) {
+            value = element.getAttribute("Value");
+          }
+          textBox.value = value;
+
+          //设置文本框的失去焦点事件
+          textBox.onblur = function () {
+            CancelEditCell(this.parentNode, this.value);
+          };
+          //向当前单元格添加文本框
+          ClearChild(element);
+          element.appendChild(textBox);
+          textBox.focus();
+          textBox.select();
+
+          //改变状态变量
+          element.setAttribute("EditState", "true");
+          element.parentNode.parentNode.setAttribute(
+            "CurrentRow",
+            element.parentNode.rowIndex
+          );
+        }
+      }
+
+      /* 为单元格创建选择框 */
+      function CreateDropDownList(element, value) {
+        //检查编辑状态，如果已经是编辑状态，跳过
+        var editState = element.getAttribute("EditState");
+        if (editState != "true") {
+          //创建下接框
+          var downList = document.createElement("Select");
+          downList.className = "EditCell_DropDownList";
+
+          //添加列表项
+          var items = element.getAttribute("DataItems");
+          if (!items) {
+            items =
+              element.parentNode.parentNode.rows[0].cells[
+                element.cellIndex
+              ].getAttribute("DataItems");
+          }
+
+          if (items) {
+            items = eval("[" + items + "]");
+            for (var i = 0; i < items.length; i++) {
+              var oOption = document.createElement("OPTION");
+              oOption.text = items[i].text;
+              oOption.value = items[i].value;
+              downList.options.add(oOption);
+            }
+          }
+
+          //设置列表当前值
+          if (!value) {
+            value = element.getAttribute("Value");
+          }
+          downList.value = value;
+
+          //设置创建下接框的失去焦点事件
+          downList.onblur = function () {
+            CancelEditCell(
+              this.parentNode,
+              this.value,
+              this.options[this.selectedIndex].text
+            );
+          };
+
+          //向当前单元格添加创建下接框
+          ClearChild(element);
+          element.appendChild(downList);
+          downList.focus();
+
+          //记录状态的改变
+          element.setAttribute("EditState", "true");
+          element.parentNode.parentNode.setAttribute(
+            "LastEditRow",
+            element.parentNode.rowIndex
+          );
+        }
+      }
+
+      /* 取消单元格编辑状态 */
+      function CancelEditCell(element, value, text) {
+        element.setAttribute("Value", value);
+        if (text) {
+          element.innerHTML = text;
+        } else {
+          element.innerHTML = value;
+        }
+        element.setAttribute("EditState", "false");
+
+        //检查是否有公式计算
+        CheckExpression(element.parentNode);
+      }
+
+      /* 清空指定对象的所有字节点 */
+      function ClearChild(element) {
+        element.innerHTML = "";
+      }
+
+      /* 添加行 */
+      function AddRow(table, index) {
+        var lastRow = table.rows[table.rows.length - 1];
+        var newRow = lastRow.cloneNode(true);
+        newRow.cells[1].innerHTML = "";
+        newRow.cells[2].innerHTML = "";
+        newRow.cells[3].innerHTML = "";
+        newRow.cells[4].innerHTML = "";
+        newRow.cells[5].innerHTML = "";
+        table.tBodies[0].appendChild(newRow);        
+        SetRowCanEdit(newRow);
+        return newRow;
+      }
+
+      /* 删除行 */
+      function DeleteRow(table, index) {
+        for (var i = table.rows.length - 1; i > 0; i--) {
+          var chkOrder = table.rows[i].cells[0].children[0];
+          if (chkOrder) {
+            if ((chkOrder.type = "CHECKBOX")) {
+              if (chkOrder.checked) {
+                //执行删除
+                table.deleteRow(i);
+              }
+            }
+          }
+        }
+      }
+
+      /* 提取表格的值,JSON格式 */
+      function GetTableData(table) {
+        var tableData = new Array();
+        alert("行数：" + table.rows.length);
+        for (var i = 1; i < table.rows.length; i++) {
+          tableData.push(GetRowData(tabProduct.rows[i]));
+        }
+
+        return tableData;
+      }
+
+      /* 提取指定行的数据，JSON格式 */
+      function GetRowData(row) {
+        var rowData = {};
+        for (var j = 0; j < row.cells.length; j++) {
+          name = row.parentNode.rows[0].cells[j].getAttribute("Name");
+          if (name) {
+            var value = row.cells[j].getAttribute("Value");
+            if (!value) {
+              value = row.cells[j].innerHTML;
+            }
+
+            rowData[name] = value;
+          }
+        }
+        //alert("ProductName:" + rowData.ProductName);
+        //或者这样：alert("ProductName:" + rowData["ProductName"]);
+        return rowData;
+      }
+
+      function GetDataFromDB() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+           if (this.readyState == 4 && this.status == 200) {
+              var table = document.getElementById(tabProduct);
+              table.insertRow();
+           }
+        };
+        xhttp.open("GET", "/getmachine", true);
+        xhttp.send();
+      }
+
+      window.onload = function() {
+         GetDataFromDB();
+      }
+    </script>
+  </body>
+</html>
